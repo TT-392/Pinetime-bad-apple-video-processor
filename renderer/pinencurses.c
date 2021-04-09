@@ -19,6 +19,9 @@ void display_init() {
 
 void wait() {
     int ch = getch();
+}
+
+void display_stop() {
     endwin();
 }
 

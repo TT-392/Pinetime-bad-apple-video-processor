@@ -32,7 +32,12 @@ int writeBlock(struct dataBlock data, FILE *file) {
 
     fputs("\n", file);
 
-    fputs(data.bitmap, file);
+    int blockSize = ((data.x2+1) * (data.y2+1) + 7) / 8; // bytes rounded up
+
+    for (int i = 0; i < blockSize; i++) {
+        fputc(data.bitmap[i], file);
+    }
+
     fputs("\n", file);
 }
 

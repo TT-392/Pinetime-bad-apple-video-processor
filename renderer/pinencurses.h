@@ -8,5 +8,6 @@ void display_init();
 
 void wait();
 
+void display_stop();
 
 void drawmono(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t* frame);
