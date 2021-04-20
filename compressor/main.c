@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "utils.h"
 
 #include "fileHandling.h"
 
@@ -37,11 +38,18 @@ int main() {
                 for (int b = 0; b < 8; b++) {
                     newFrame[x*8 + b][y] = (byte >> b) & 1;
                 }
+                startFrame[x+y*(frameWidth/8)] = byte;
             }
         }
 
         if (i == 1) {
-            
+            struct dataBlock block = {0};
+            block.x1 = 0;
+            block.y1 = 0;
+            block.x2 = frameWidth-1;
+            block.y2 = frameHeight;
+            block.bitmap = startFrame;
+            writeBlock(block, file);
         } else {
             bool stuffChanging = 1;
             while (stuffChanging) {
@@ -81,8 +89,8 @@ int main() {
                 }
                 block.y2--;
 
+                fillBlock(frameWidth, frameHeight, newFrame, &block);
 
-                getchar();
                 ////// render //////
                 for (int y = 0; y < frameHeight; y++) {
                     for (int x = 0; x < frameWidth; x++) {
@@ -121,6 +129,8 @@ int main() {
                     }
                     printf("\n");
                 }
+
+
                 if (stuffChanging)
                     writeBlock(block, file);
             }
