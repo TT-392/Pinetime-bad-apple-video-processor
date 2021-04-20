@@ -4,13 +4,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "utils.h"
+#include "optimization.h"
 
 #include "fileHandling.h"
 
 #define frameWidth 56
 #define frameHeight 49
 
-uint8_t bitmap[frameHeight*(frameWidth/8)] = {};
+static uint8_t bitmap[frameHeight*(frameWidth/8)] = {};
 uint8_t startFrame[frameHeight*(frameWidth/8)] = {};
 bool frameBeingOverwritten[frameWidth][frameHeight] = {};
 bool newFrame[frameWidth][frameHeight] = {};
@@ -20,39 +21,26 @@ int main() {
     file = fopen("output","wb");
 
 
-
     for (int i = 1; i < 3; i++) {
-        FILE *input;
-        char buffer[50];
 
-        //sprintf(buffer, "../video/30fps/apple%05d.png.mono", i);
-        sprintf(buffer, "../frame%i.mono", i);
-
-        printf(buffer);
-        printf("\n");
-
-        input = fopen(buffer, "rb");
-        for (int y = 0; y < frameHeight; y++) {
-            for (int x = 0; x < frameWidth/8; x++) {
-                uint8_t byte = fgetc(input);
-                for (int b = 0; b < 8; b++) {
-                    newFrame[x*8 + b][y] = (byte >> b) & 1;
-                }
-                startFrame[x+y*(frameWidth/8)] = byte;
-            }
-        }
+        readFrame(frameWidth, frameHeight, newFrame, i);
 
         if (i == 1) {
             struct dataBlock block = {0};
             block.x1 = 0;
             block.y1 = 0;
             block.x2 = frameWidth-1;
-            block.y2 = frameHeight;
+            block.y2 = frameHeight-1;
             block.bitmap = startFrame;
+
+            fillBlock(frameWidth, frameHeight, newFrame, &block);
+
             writeBlock(block, file);
         } else {
-            bool stuffChanging = 1;
+            findNextBlock(frameWidth, frameHeight, frameBeingOverwritten, newFrame, file);
+            /*bool stuffChanging = 1;
             while (stuffChanging) {
+                int ch = getchar();
                 struct dataBlock block = {0};
                 block.x1 = 0;
                 block.y1 = 0;
@@ -133,7 +121,7 @@ int main() {
 
                 if (stuffChanging)
                     writeBlock(block, file);
-            }
+            } */
         }
 
         for (int y = 0; y < frameHeight; y++) {
@@ -142,7 +130,6 @@ int main() {
             }
         }
 
-        fclose(input);
     }
 
 
