@@ -3,4 +3,4 @@
 #include <stdio.h>
 #include "struct.h"
 
-void findNextBlock (int width, int height, bool frameBeingOverwritten[width][height], bool overwritingFrame[width][height], FILE* file);
+void findSimpleBlocks(int width, int height, bool frameBeingOverwritten[width][height], bool overwritingFrame[width][height], struct dataBlock **blocksArray, int *uwu);
