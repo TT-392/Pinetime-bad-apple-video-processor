@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "struct.h"
@@ -16,7 +16,6 @@ void findSimpleBlocks (int width, int height, bool frameBeingOverwritten[width][
 
     bool stuffChanging = 1;
     while (stuffChanging) {
-        //int ch = getchar();
         struct dataBlock block = {0};
         block.x1 = 0;
         block.y1 = 0;
@@ -56,43 +55,17 @@ void findSimpleBlocks (int width, int height, bool frameBeingOverwritten[width][
         block.y2--;
 
 
-        ////// render //////
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 bool selected = 0;
                 if (x >= block.x1 && x <= block.x1+block.x2 && y >= block.y1 && y <= block.y1+block.y2)
                     selected = 1;
 
-                if (tempFrame[x][y]) {
-                    if (!selected) {
-                        if (frameBeingOverwritten[x][y])
-                            printf("  ");
-                        else // changed
-                            printf("◍ ");
-                    } else {
-                        if (frameBeingOverwritten[x][y])
-                            printf("□ ");
-                        else // changed
-                            printf("▥ ");
-                    }
-                } else {
-                    if (!selected) {
-                        if (frameBeingOverwritten[x][y]) // changed
-                            printf("○ ");
-                        else 
-                            printf("  ");
-                    } else {
-                        if (frameBeingOverwritten[x][y]) // changed
-                            printf("▤ ");
-                        else 
-                            printf("□ ");
-                    }
-                }
                 if (selected) {
                     tempFrame[x][y] = frameBeingOverwritten[x][y];
                 }
             }
-            printf("\n");
+            //printf("\n");
         }
 
 

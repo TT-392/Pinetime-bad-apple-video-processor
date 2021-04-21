@@ -32,3 +32,56 @@ void fillBlock(int width, int height, bool frame[width][height], struct dataBloc
         }
     }
 }
+
+void renderChanges(int width, int height, bool startFrame[width][height], bool newFrame[width][height], struct dataBlock* blocks, int arrayLength) {
+    bool finalFrame[width][height];
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            finalFrame[x][y] = startFrame[x][y];
+        }
+    }
+    for (int i = 0; i < arrayLength; i++) {
+        struct dataBlock block = blocks[i];
+
+        ////// render //////
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                bool selected = 0;
+                if (x >= block.x1 && x <= block.x1+block.x2 && y >= block.y1 && y <= block.y1+block.y2)
+                    selected = 1;
+
+                if (newFrame[x][y]) {
+                    if (!selected) {
+                        if (startFrame[x][y])
+                            printf("  ");
+                        else // changed
+                            printf("◍ ");
+                    } else {
+                        if (startFrame[x][y])
+                            printf("□ ");
+                        else // changed
+                            printf("▥ ");
+                    }
+                } else {
+                    if (!selected) {
+                        if (startFrame[x][y]) // changed
+                            printf("○ ");
+                        else 
+                            printf("  ");
+                    } else {
+                        if (startFrame[x][y]) // changed
+                            printf("▤ ");
+                        else 
+                            printf("□ ");
+                    }
+                }
+
+                if (selected) {
+                    newFrame[x][y] = startFrame[x][y];
+                }
+            }
+            printf("\n");
+        }
+        int ch = getchar();
+    }
+}
