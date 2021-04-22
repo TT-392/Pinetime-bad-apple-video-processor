@@ -41,6 +41,8 @@ int main() {
             int blocksLength;
             findSimpleBlocks(frameWidth, frameHeight, frameBeingOverwritten, newFrame, &blocks, &blocksLength);
 
+            optimizeBlocks(frameWidth, frameHeight, frameBeingOverwritten, newFrame, &blocks, &blocksLength);
+
             for (int i = 0; i < blocksLength;  i++) {
                 blocks[i].bitmap = bitmap;
                 fillBlock(frameWidth, frameHeight, newFrame, &blocks[i]);
