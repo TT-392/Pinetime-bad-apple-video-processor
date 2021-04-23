@@ -16,6 +16,7 @@ blockCost:		375629908437
 overlappingCorners:	731619321
 deleteUselessData:	1345460715
 combinedBlock:		637003012
+sum: 139249d59edc5da896943f3c95b1d719cfa7d925
 
 
 performance with double checks removed:
@@ -26,3 +27,13 @@ overlappingCorners:	731423465
 deleteUselessData:	1345827064
 combinedBlock:		317658845
 sum: 139249d59edc5da896943f3c95b1d719cfa7d925
+
+performance with cost cut at max
+
+// all iterations
+blockCost:		701304257
+overlappingCorners:	734430215
+deleteUselessData:	1354234857
+combinedBlock:		315785295
+sum: 139249d59edc5da896943f3c95b1d719cfa7d925
+
