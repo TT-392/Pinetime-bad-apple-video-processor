@@ -154,11 +154,12 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
     while (stuffToOptimize) {
         stuffToOptimize = 0;
 
+        int maxSavedCost = 0;
+        int bestBlock1 = -1;
+        int bestBlock2 = -1;
         for (int i = 0; i < *arrayLength; i++) {
             struct dataBlock block1 = (*blocksArray)[i];
 
-            int maxSavedCost = 0;
-            int bestBlock = -1;
             for (int j = 0; j < *arrayLength; j++){
                 if (j != i) {
                     struct dataBlock block2 = (*blocksArray)[j];
@@ -182,19 +183,18 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
                         }
                         if (!betterBlock) {
                             maxSavedCost = savedCost;
-                            bestBlock = j;
+                            bestBlock1 = j;
+                            bestBlock2 = i;
                         }
                     }
                 }
             }
-
-            if (bestBlock != -1) {
-                printf("merging %i and %i\n", i, bestBlock);
-                mergeBlocks(i, bestBlock, blocksArray, arrayLength);
-                break;
-            } 
         }
-        deleteUselessData (blocksArray, arrayLength);
+        if (bestBlock1 != -1) {
+            printf("merging %i and %i\n", bestBlock2, bestBlock1);
+            mergeBlocks(bestBlock1 , bestBlock2, blocksArray, arrayLength);
+            deleteUselessData (blocksArray, arrayLength);
+        } 
     }
 }
 
