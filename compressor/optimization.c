@@ -19,6 +19,87 @@ int blockCost (int width, int height, bool xorPixels[width][height], struct data
     return cost;
 }
 
+int overlappingCorners (struct dataBlock block1, struct dataBlock block2) {
+    int retval = 0;
+    int corners = 0;
+    for (int i = 0; i < 4; i++) {
+        int x = block1.x1;
+        int y = block1.x1;
+        switch (i) {
+            case 0: // top left
+                x = block1.x1;
+                y = block1.y1;
+                break;
+            case 1: // top right
+                x = block1.x1 + block1.x2;
+                y = block1.y1;
+                break;
+            case 2: // bottom right
+                x = block1.x1 + block1.x2;
+                y = block1.y1 + block1.y2;
+                break;
+            case 3: // bottom left
+                x = block1.x1;
+                y = block1.y1 + block1.y2;
+                break;
+        }
+
+        if (x >= block2.x1 && x <= block2.x1 + block2.x2) {
+            if (y >= block2.y1 && y <= block2.y1 + block2.y2) {
+                retval |= 1 << i;
+                corners++;
+            }
+        }
+    }
+    if (corners >= 2)
+        return retval;
+    else
+        return 0;
+}
+
+void deleteUselessData (struct dataBlock **blocksArray, int *arrayLength) {
+    for (int i = 0; i < *arrayLength; i++) {
+        for (int j = 0; j < *arrayLength; j++) {
+            if (i != j) {
+                int overlap = overlappingCorners((*blocksArray)[i], (*blocksArray)[j]);
+
+                if (overlap != 0 && overlap != 0xf) {
+                    struct dataBlock *block1 = &(*blocksArray)[i];
+                    struct dataBlock *block2 = &(*blocksArray)[j];
+                    int cut = 0;
+                    switch (overlap) {
+                        case 0x3: // top 2 corners
+                            cut = (block2->y1 + block2->y2 + 1) - block1->y1;
+                            block1->y1 += cut;
+                            block1->y2 -= cut;
+                            break;
+                        case 0xc: // bottom 2 corners
+                            cut = (block1->y1 + block1->y2 + 1) - block2->y1;
+                            block1->y2 -= cut;
+                            break;
+                        case 0x9: // left 2 corners
+                            cut = (block2->x1 + block2->x2 + 1) - block1->x1;
+                            block1->x1 += cut;
+                            block1->x2 -= cut;
+                            break;
+                        case 0x6: // right 2 corners
+                            cut = (block1->x1 + block1->x2 + 1) - block2->x1;
+                            block1->x2 -= cut;
+                            break;
+                    }
+                    printf("shrinking block\n");
+                } else if (overlap == 0xf) {
+                    printf("deleting useless block\n");
+                    memcpy(&(*blocksArray)[i], &(*blocksArray)[i + 1], ((*arrayLength) - (i + 1))*sizeof(struct dataBlock));
+                    (*arrayLength)--;
+                    i--;
+                    j--;
+                }
+            }
+        }
+    }
+}
+
 struct dataBlock combinedBlock (struct dataBlock block1, struct dataBlock block2) {
     struct dataBlock returnBlock;
     if (block1.x1 < block2.x1)
@@ -69,47 +150,51 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
         }
     }
 
-    for (int i = 0; i < *arrayLength; i++) {
-        struct dataBlock block1 = (*blocksArray)[i];
-        printf("block: %i\n", i);
+    bool stuffToOptimize = 1;
+    while (stuffToOptimize) {
+        stuffToOptimize = 0;
 
-        int maxSavedCost = 0;
-        int bestBlock = -1;
-        for (int j = 1; j < *arrayLength; j ++){//= 1 + (i == j - 1)) {
-            struct dataBlock block2 = (*blocksArray)[j];
-            int unmergedCost = blockCost(width, height, xorPixels, block1) + blockCost(width, height, xorPixels, block2);
-            int mergedCost = blockCost(width, height, xorPixels, combinedBlock(block1, block2));
+        for (int i = 0; i < *arrayLength; i++) {
+            struct dataBlock block1 = (*blocksArray)[i];
 
-            int savedCost = unmergedCost - mergedCost;
-            printf("saved cost for %i: %i\n", j, savedCost);
-            if (savedCost > maxSavedCost) {
-                printf("merge candidate %i\n", j);
+            int maxSavedCost = 0;
+            int bestBlock = -1;
+            for (int j = 0; j < *arrayLength; j++){
+                if (j != i) {
+                    struct dataBlock block2 = (*blocksArray)[j];
+                    int unmergedCost = blockCost(width, height, xorPixels, block1) + blockCost(width, height, xorPixels, block2);
+                    int mergedCost = blockCost(width, height, xorPixels, combinedBlock(block1, block2));
 
-                // check if there are no better merge candidates for the found block
-                bool betterBlock = 0;
-                for (int k = 0; k < *arrayLength; k++) {
-                    int unmergedCost2 = blockCost(width, height, xorPixels, block1) + blockCost(width, height, xorPixels, block2);
-                    int mergedCost2 = blockCost(width, height, xorPixels, combinedBlock(block1, block2));
-                    if (unmergedCost2 - mergedCost2 > savedCost) {
-                        betterBlock = 1;
-                        printf("better block found: %i\n", k);
+                    int savedCost = unmergedCost - mergedCost;
+                    if (savedCost > maxSavedCost) {
+                        stuffToOptimize = 1;
+
+                        // check if there are no better merge candidates for the found block
+                        bool betterBlock = 0;
+                        for (int k = 0; k < *arrayLength; k++) {
+                            if (k != j) {
+                                int unmergedCost2 = blockCost(width, height, xorPixels, block1) + blockCost(width, height, xorPixels, block2);
+                                int mergedCost2 = blockCost(width, height, xorPixels, combinedBlock(block1, block2));
+                                if (unmergedCost2 - mergedCost2 > savedCost) {
+                                    betterBlock = 1;
+                                }
+                            }
+                        }
+                        if (!betterBlock) {
+                            maxSavedCost = savedCost;
+                            bestBlock = j;
+                        }
                     }
                 }
-                if (!betterBlock) {
-                    maxSavedCost = savedCost;
-                    bestBlock = j;
-                }
             }
-        }
 
-        if (bestBlock != -1) {
-            printf("merging with %i\n", bestBlock);
-            mergeBlocks(i, bestBlock, blocksArray, arrayLength);
-            break;
-        } else {
-            printf("no merge candidate found");
+            if (bestBlock != -1) {
+                printf("merging %i and %i\n", i, bestBlock);
+                mergeBlocks(i, bestBlock, blocksArray, arrayLength);
+                break;
+            } 
         }
-
+        deleteUselessData (blocksArray, arrayLength);
     }
 }
 
@@ -141,7 +226,7 @@ void findSimpleBlocks (int width, int height, bool frameBeingOverwritten[width][
                 }
             }
         }
-        nestedBreak:
+nestedBreak:
 
         if (!stuffChanging)
             break;
