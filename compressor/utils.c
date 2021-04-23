@@ -1,6 +1,19 @@
 #include "struct.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <time.h>
+
+
+uint64_t getTimeNS() {
+    uint64_t timens = 0;
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    timens = ts.tv_nsec + 1000000000 * ts.tv_sec;
+
+    return timens;
+}
+
 
 void readFrame(int width, int height, bool frame[width][height], int frameNr) {
     FILE *input;

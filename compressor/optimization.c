@@ -2,33 +2,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "struct.h"
 #include "utils.h"
 
 #define newBlockCost 12 // the amount of time it costs for a new block to be written in units of time it takes to write a pixel
 
+static uint64_t blockCostTime = 0;
+static uint64_t overlappingCornersTime = 0;
+static uint64_t deleteUselessDataTime = 0;
+static uint64_t combinedBlockTime = 0;
+
+void printPerformance() {
+    printf("blockCost:\t\t%lli\noverlappingCorners:\t%lli\ndeleteUselessData:\t%lli\ncombinedBlock:\t\t%lli\n", blockCostTime, overlappingCornersTime, deleteUselessDataTime, combinedBlockTime);
+}
+
 int blockCost (int width, int height, bool xorPixels[width][height], bool coveredPixels[width][height], struct dataBlock block) {
+    uint64_t startTime = getTimeNS();
+
     int cost = newBlockCost;
     for (int y = 0; y < (block.y2 + 1); y++) {
         for (int x = 0; x < (block.x2 + 1); x++) {
-            //bool pixelInDifferentBlock = 0;
-            //for (int i = 0; i < *arrayLength; i++) {
-            //    struct dataBlock *block2 = &((*blocksArray)[i]);
-
-            //    if (x >= block2->x1 && x <= block2->x1 + block2->x2 &&
-            //        y >= block2->y1 && y <= block2->y1 + block2->y2) {
-            //        pixelInDifferentBlock = 1;
-            //    }
-            //}
             if ((!xorPixels[x + block.x1][y + block.y1]) || coveredPixels[x + block.x1][y + block.y1]) {
                 cost++;
             }
         }
     }
+
+    blockCostTime += getTimeNS() - startTime;
     return cost;
 }
 
 int overlappingCorners (struct dataBlock block1, struct dataBlock block2) {
+    uint64_t startTime = getTimeNS();
     int retval = 0;
     int corners = 0;
     for (int i = 0; i < 4; i++) {
@@ -60,6 +66,8 @@ int overlappingCorners (struct dataBlock block1, struct dataBlock block2) {
             }
         }
     }
+    overlappingCornersTime += getTimeNS() - startTime;
+
     if (corners >= 2)
         return retval;
     else
@@ -67,6 +75,8 @@ int overlappingCorners (struct dataBlock block1, struct dataBlock block2) {
 }
 
 void deleteUselessData (struct dataBlock **blocksArray, int *arrayLength) {
+    uint64_t startTime = getTimeNS();
+
     for (int i = 0; i < *arrayLength; i++) {
         for (int j = 0; j < *arrayLength; j++) {
             if (i != j) {
@@ -107,9 +117,11 @@ void deleteUselessData (struct dataBlock **blocksArray, int *arrayLength) {
             }
         }
     }
+    deleteUselessDataTime += getTimeNS() - startTime;
 }
 
 struct dataBlock combinedBlock (struct dataBlock block1, struct dataBlock block2) {
+    uint64_t startTime = getTimeNS();
     struct dataBlock returnBlock;
     if (block1.x1 < block2.x1)
         returnBlock.x1 = block1.x1;
@@ -130,6 +142,8 @@ struct dataBlock combinedBlock (struct dataBlock block1, struct dataBlock block2
         returnBlock.y2 = (block1.y1 + block1.y2) - returnBlock.y1;
     else 
         returnBlock.y2 = (block2.y1 + block2.y2) - returnBlock.y1;
+    combinedBlockTime += getTimeNS() - startTime;
+
     return returnBlock;
 }
 
@@ -151,7 +165,7 @@ void mergeBlocks(int block1, int block2, struct dataBlock **blocksArray, int *ar
     (*arrayLength)--;
 }
 
-void fillCoveredPixels (int width, int height, bool coveredPixels[width][height], struct dataBlock **blocksArray, int *arrayLength) {
+void updateCoveredPixels (int width, int height, bool coveredPixels[width][height], struct dataBlock **blocksArray, int *arrayLength) {
     for (int i = 0; i < *arrayLength; i++) {
         struct dataBlock block = (*blocksArray)[i];
         for (int y = 0; y < block.y2 + 1; y++) {
@@ -171,22 +185,24 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
             coveredPixels[x][y] = 0;
         }
     }
-    fillCoveredPixels (width, height, coveredPixels, blocksArray, arrayLength);
+    updateCoveredPixels (width, height, coveredPixels, blocksArray, arrayLength);
 
     bool stuffToOptimize = 1;
     while (stuffToOptimize) {
+        printPerformance();
         stuffToOptimize = 0;
 
         int maxSavedCost = 0;
         int bestBlock1 = -1;
         int bestBlock2 = -1;
-        for (int i = 0; i < *arrayLength; i++) {
+        for (int i = 1; i < *arrayLength; i++) {
             struct dataBlock block1 = (*blocksArray)[i];
+            int block1Cost = blockCost(width, height, xorPixels, coveredPixels, block1);
 
             for (int j = 0; j < *arrayLength; j++){
                 if (j != i) {
                     struct dataBlock block2 = (*blocksArray)[j];
-                    int unmergedCost = blockCost(width, height, xorPixels, coveredPixels, block1) + blockCost(width, height, xorPixels, coveredPixels, block2);
+                    int unmergedCost = block1Cost + blockCost(width, height, xorPixels, coveredPixels, block2);
                     int mergedCost = blockCost(width, height, xorPixels, coveredPixels, combinedBlock(block1, block2));
 
                     int savedCost = unmergedCost - mergedCost;
@@ -204,19 +220,21 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
             printf("merging %i and %i\n", bestBlock2, bestBlock1);
             mergeBlocks(bestBlock1 , bestBlock2, blocksArray, arrayLength);
             deleteUselessData (blocksArray, arrayLength);
-            fillCoveredPixels (width, height, coveredPixels, blocksArray, arrayLength);
+
+            updateCoveredPixels (width, height, coveredPixels, blocksArray, arrayLength);
         } 
+
     }
 }
 
 void findSimpleBlocks (int width, int height, bool frameBeingOverwritten[width][height], bool overwritingFrame[width][height], struct dataBlock **blocksArray, int *arrayLength) {
-    *arrayLength = 0;
-    bool tempFrame[width][height];
+    bool xorPixels[width][height];
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            tempFrame[x][y] = overwritingFrame[x][y];
+            xorPixels[x][y] = frameBeingOverwritten[x][y] ^ overwritingFrame[x][y];
         }
     }
+    *arrayLength = 0;
 
     bool stuffChanging = 1;
     while (stuffChanging) {
@@ -227,9 +245,10 @@ void findSimpleBlocks (int width, int height, bool frameBeingOverwritten[width][
         block.y2 = 0;
 
         stuffChanging = 0;
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (tempFrame[x][y] != frameBeingOverwritten[x][y]) {
+                if (xorPixels[x][y]) {
                     block.x1 = x;
                     block.y1 = y;
                     stuffChanging = 1;
@@ -242,17 +261,18 @@ nestedBreak:
         if (!stuffChanging)
             break;
 
-        while (tempFrame[block.x1+block.x2+1][block.y1] != frameBeingOverwritten[block.x1+block.x2+1][block.y1]) {
+        while (xorPixels[block.x1+block.x2+1][block.y1] && block.x1 + block.x2 + 1 < width) {
             block.x2++;
         }
 
-        int samePixels = 0;
 
-        while (samePixels == 0) {
+        int unchangedPixels = 0;
+
+        while (unchangedPixels == 0 && block.y1 + block.y2 < height) {
             block.y2++;
             for (int x = 0; x < block.x2+1; x++) {
-                if (tempFrame[block.x1+x][block.y1+block.y2] == frameBeingOverwritten[block.x1+x][block.y1+block.y2]) {
-                    samePixels++;
+                if (!xorPixels[block.x1+x][block.y1+block.y2]) {
+                    unchangedPixels++;
                 }
             }
         }
@@ -266,10 +286,9 @@ nestedBreak:
                     selected = 1;
 
                 if (selected) {
-                    tempFrame[x][y] = frameBeingOverwritten[x][y];
+                    xorPixels[x][y] = 0;
                 }
             }
-            //printf("\n");
         }
 
 
@@ -285,5 +304,9 @@ nestedBreak:
                 free(oldBlocks);
             (*arrayLength)++;
         }
+
+        assert (block.x2 + block.x1 < width);
+        assert (block.y2 + block.y1 < height);
+
     }
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "utils.h"
@@ -8,8 +9,10 @@
 
 #include "fileHandling.h"
 
-#define frameWidth 56
-#define frameHeight 49
+//#define frameWidth 56
+//#define frameHeight 49
+#define frameWidth 240
+#define frameHeight 240
 
 uint8_t bitmap[frameHeight*(frameWidth/8)] = {};
 uint8_t startFrame[frameHeight*(frameWidth/8)] = {};
@@ -19,7 +22,6 @@ bool newFrame[frameWidth][frameHeight] = {};
 int main() {
     FILE *file;
     file = fopen("output","wb");
-
 
     for (int i = 1; i < 3; i++) {
 
@@ -43,9 +45,17 @@ int main() {
 
             optimizeBlocks(frameWidth, frameHeight, frameBeingOverwritten, newFrame, &blocks, &blocksLength);
 
+            printf("%i\n", blocksLength);
             for (int i = 0; i < blocksLength;  i++) {
+
+                printf("block %i start\n", i);
                 blocks[i].bitmap = bitmap;
+                blocks[i].newFrame = 0;
+
+                printf("calling fillBlock\n");
                 fillBlock(frameWidth, frameHeight, newFrame, &blocks[i]);
+
+                printf("calling writeBlocks\n");
                 writeBlock(blocks[i], file);
             }
 

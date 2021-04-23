@@ -1,0 +1,28 @@
+// one iteration
+blockCost:		2822059487
+overlappingCorners:	5766502
+deleteUselessData:	10577741
+combinedBlock:		5037551
+
+performance with just one array:
+// one iteration
+blockCost:		2576373419
+overlappingCorners:	5668467
+deleteUselessData:	10475108
+combinedBlock:		5026926
+
+// all iterations:
+blockCost:		375629908437
+overlappingCorners:	731619321
+deleteUselessData:	1345460715
+combinedBlock:		637003012
+
+
+performance with double checks removed:
+
+// all iterations:
+blockCost:		189511375185
+overlappingCorners:	731423465
+deleteUselessData:	1345827064
+combinedBlock:		317658845
+sum: 139249d59edc5da896943f3c95b1d719cfa7d925
