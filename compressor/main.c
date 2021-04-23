@@ -49,7 +49,7 @@ int main() {
                 writeBlock(blocks[i], file);
             }
 
-            renderChanges(frameWidth, frameHeight, frameBeingOverwritten, newFrame, blocks, blocksLength);
+            //renderChanges(frameWidth, frameHeight, frameBeingOverwritten, newFrame, blocks, blocksLength);
         }
 
         for (int y = 0; y < frameHeight; y++) {
