@@ -12,13 +12,20 @@ int main() {
 
 
     FILE *file;
-    file = fopen("output","rb");
+    file = fopen("output_compressed","rb");
+    
 
     while (1) {
-        struct dataBlock data = readBlock(file);
+        struct dataBlock data = readBlock_compressed(file);
+
+
+        if (data.eof)
+            break;
+
+        if (data.newFrame)
+            wait();
 
         drawmono(data.x1, data.y1, data.x2+data.x1, data.y2+data.y1, data.bitmap);
-        wait();
     }
     fclose(file);
 

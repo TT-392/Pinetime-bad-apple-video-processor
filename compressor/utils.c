@@ -5,6 +5,7 @@
 
 
 uint64_t getTimeNS() {
+    /*
     uint64_t timens = 0;
 
     struct timespec ts;
@@ -12,13 +13,14 @@ uint64_t getTimeNS() {
     timens = ts.tv_nsec + 1000000000 * ts.tv_sec;
 
     return timens;
+    */
 }
 
 
 void readFrame(int width, int height, bool frame[width][height], int frameNr) {
     FILE *input;
     char buffer[50];
-    sprintf(buffer, "../frame%i.mono", frameNr);
+    sprintf(buffer, "../video/30fps/apple%05d.png.mono", frameNr);
 
     input = fopen(buffer, "rb");
     for (int y = 0; y < height; y++) {

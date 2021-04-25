@@ -10,6 +10,8 @@ struct dataBlock {
 
     bool newFrame;
 
+    bool eof;
+
     uint8_t* bitmap;
 };
 

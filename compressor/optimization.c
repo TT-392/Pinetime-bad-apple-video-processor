@@ -108,9 +108,9 @@ void deleteUselessData (struct dataBlock **blocksArray, int *arrayLength) {
                             block1->x2 -= cut;
                             break;
                     }
-                    printf("shrinking block\n");
+                    //printf("shrinking block\n");
                 } else if (overlap == 0xf) {
-                    printf("deleting useless block\n");
+                    //printf("deleting useless block\n");
                     memcpy(&(*blocksArray)[i], &(*blocksArray)[i + 1], ((*arrayLength) - (i + 1))*sizeof(struct dataBlock));
                     (*arrayLength)--;
                     i--;
@@ -191,7 +191,7 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
 
     bool stuffToOptimize = 1;
     while (stuffToOptimize) {
-        printPerformance();
+        //printPerformance();
         stuffToOptimize = 0;
 
         int maxSavedCost = 0;
@@ -218,7 +218,7 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
             }
         }
         if (stuffToOptimize) {
-            printf("merging %i and %i\n", bestBlock2, bestBlock1);
+            //printf("merging %i and %i\n", bestBlock2, bestBlock1);
             mergeBlocks(bestBlock1 , bestBlock2, blocksArray, arrayLength);
             deleteUselessData (blocksArray, arrayLength);
 

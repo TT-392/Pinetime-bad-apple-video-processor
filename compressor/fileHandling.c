@@ -6,6 +6,25 @@
 #include "struct.h"
 #include "fileHandling.h"
 
+int writeBlock_compressed (struct dataBlock data, FILE *file) {
+    char buffer[50];
+
+    fputc(data.newFrame, file);
+
+    fputc(data.x1, file);
+    fputc(data.y1, file);
+    fputc(data.x2, file);
+    fputc(data.y2, file);
+
+
+    int blockSize = ((data.x2+1) * (data.y2+1) + 7) / 8; // bytes rounded up
+
+    for (int i = 0; i < blockSize; i++) {
+        fputc(data.bitmap[i], file);
+    }
+
+}
+
 int writeBlock(struct dataBlock data, FILE *file) {
     char buffer[50];
     sprintf(buffer, "%i",data.newFrame);
@@ -41,12 +60,65 @@ int writeBlock(struct dataBlock data, FILE *file) {
     fputs("\n", file);
 }
 
+struct dataBlock readBlock_compressed(FILE *file) {
+    struct dataBlock retval = {};
+    retval.eof = 0;
+
+    char c = fgetc(file);
+
+    retval.newFrame = (uint8_t)c;
+    //printf("%i\n", (uint8_t)c); 
+
+    c = fgetc(file);
+
+    retval.x1 = (uint8_t)c;
+    //printf("%i\n", (uint8_t)c); 
+
+    c = fgetc(file);
+
+    retval.y1 = (uint8_t)c;
+    ///printf("%i\n", (uint8_t)c); 
+
+    c = fgetc(file);
+
+    retval.x2 = (uint8_t)c;
+    //printf("%i\n", (uint8_t)c); 
+
+    c = fgetc(file);
+
+    retval.y2 = (uint8_t)c;
+    ///printf("%i\n", (uint8_t)c); 
+
+
+    
+    int blockSize = ((retval.x2+1) * (retval.y2+1) + 7) / 8; // bytes rounded up
+
+    retval.bitmap = malloc(blockSize);
+
+    for (int i = 0; i < blockSize + 7 / 8; i++) {
+        retval.bitmap[i] = fgetc(file);
+        //printf("%i\n", i);
+        //printf("%i\n", retval.bitmap[i]);
+    }
+    
+    return retval;
+}
+
+
 struct dataBlock readBlock(FILE *file) {
     struct dataBlock retval = {};
     retval.newFrame = fgetc(file) == '1' ? 1 : 0;
     fgetc(file);
 
+    retval.eof = 0;
+
     char c = fgetc(file);
+
+    if (c == EOF) {
+        retval.eof = 1;
+        return retval;
+    }
+
     while (c != '\n') {
         retval.x1 *= 10;
         retval.x1 += c - '0';
@@ -54,6 +126,11 @@ struct dataBlock readBlock(FILE *file) {
     }
 
     c = fgetc(file);
+    if (c == EOF) {
+        retval.eof = 1;
+        return retval;
+    }
+
     while (c != '\n') {
         retval.y1 *= 10;
         retval.y1 += c - '0';
@@ -61,6 +138,10 @@ struct dataBlock readBlock(FILE *file) {
     }
     
     c = fgetc(file);
+    if (c == EOF) {
+        retval.eof = 1;
+        return retval;
+    }
     while (c != '\n') {
         retval.x2 *= 10;
         retval.x2 += c - '0';
@@ -68,6 +149,10 @@ struct dataBlock readBlock(FILE *file) {
     }
     
     c = fgetc(file);
+    if (c == EOF) {
+        retval.eof = 1;
+        return retval;
+    }
     while (c != '\n') {
         retval.y2 *= 10;
         retval.y2 += c - '0';
