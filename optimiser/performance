@@ -37,3 +37,10 @@ deleteUselessData:	1354234857
 combinedBlock:		315785295
 sum: 139249d59edc5da896943f3c95b1d719cfa7d925
 
+// frame 357-358 new algo
+time: 758.88 seconds
+sum: 2236ac5f6a9e638d00e99897da29e53c686774af
+
+// frame 357-358 old algo
+time: 72.61 mins 
+sum: b971a8ff84389df0f5b3b5ecf40363eb894e31fa 

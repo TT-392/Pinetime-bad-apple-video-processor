@@ -23,11 +23,11 @@ int main() {
     FILE *file;
     file = fopen("output","wb");
 
-    for (int i = 1; i < 450; i++) {
+    for (int i = 100; i < 102; i++) {
 
         readFrame(frameWidth, frameHeight, newFrame, i);
 
-        if (i == 1) {
+        if (i == 100) {
             struct dataBlock block = {0};
             block.x1 = 0;
             block.y1 = 0;
