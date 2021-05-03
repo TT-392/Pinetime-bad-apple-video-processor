@@ -181,6 +181,25 @@ void updateCoveredPixels (int width, int height, bool coveredPixels[width][heigh
 void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][height], bool overwritingFrame[width][height], struct dataBlock **blocksArray, int *arrayLength) {
     bool coveredPixels[width][height];
     bool xorPixels[width][height];
+    struct dataBlock *blockOnPixels[width][height];
+    struct dataBlock dummy;
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            blockOnPixels[x][y] = &dummy;
+        }
+    }
+
+    for (int i = 1; i < *arrayLength; i++) {
+        struct dataBlock *block = &(*blocksArray)[i];
+        for (int y = 0; y < (block->y2 + 1); y++) {
+            for (int x = 0; x < (block->x2 + 1); x++) {
+                blockOnPixels[x + block->x1][y + block->y1] = block;
+            }
+        }
+    }
+
+
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             xorPixels[x][y] = frameBeingOverwritten[x][y] ^ overwritingFrame[x][y];
@@ -197,32 +216,59 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
         int maxSavedCost = 0;
         int bestBlock1 = -1;
         int bestBlock2 = -1;
-        for (int i = 1; i < *arrayLength; i++) {
-            struct dataBlock block1 = (*blocksArray)[i];
+        for (int block1Nr = 1; block1Nr < *arrayLength; block1Nr++) {
+            struct dataBlock block1 = (*blocksArray)[block1Nr];
             int block1Cost = blockCost(width, height, xorPixels, -1, coveredPixels, block1);
 
-            for (int j = 0; j < i; j++){
-                struct dataBlock block2 = (*blocksArray)[j];
+            int topBottom = ((block1.x2 + 1) - 1) / newBlockCost + 1;
+            int sides = ((block1.y2 + 1) - 1) / newBlockCost + 1;
 
-                int unmergedCost = block1Cost + blockCost(width, height, xorPixels, -1, coveredPixels, block2);
-                int mergedCost = blockCost(width, height, xorPixels, unmergedCost, coveredPixels, combinedBlock(block1, block2));
+            for (int y = 0; y < (block1.y2 + 1) + topBottom*2; y++) {
+                for (int x = 0; x < (block1.x2 + 1) + sides*2; x++) {
+                    if (!((y >= topBottom && y <= topBottom + (block1.y2 + 1) - 1) ||
+                          (x >= sides && y <= sides + (block1.x2 + 1) - 1))) { // if not within block
+                        int actualX = block1.x1 - sides + x;
+                        int actualY = block1.y1 - topBottom + y;
+                        if (actualX >= 0 && actualX < width && actualY >= 0 && actualY < height) {
+                            if (blockOnPixels[actualX][actualY] != &dummy) {
+                                struct dataBlock block2 = *blockOnPixels[actualX][actualY];
+                                int block2Nr = blockOnPixels[actualX][actualY] - (*blocksArray);
 
-                int savedCost = unmergedCost - mergedCost;
-                if (savedCost > maxSavedCost && mergedCost != -1) {
-                    stuffToOptimize = 1;
 
-                    maxSavedCost = savedCost;
-                    bestBlock1 = j;
-                    bestBlock2 = i;
+                                int unmergedCost = block1Cost + blockCost(width, height, xorPixels, -1, coveredPixels, block2);
+                                int mergedCost = blockCost(width, height, xorPixels, unmergedCost, coveredPixels, combinedBlock(block1, block2));
+
+                                int savedCost = unmergedCost - mergedCost;
+                                if (savedCost > maxSavedCost && mergedCost != -1) {
+                                    stuffToOptimize = 1;
+
+                                    maxSavedCost = savedCost;
+                                    bestBlock1 = block2Nr;
+                                    bestBlock2 = block1Nr;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
         if (stuffToOptimize) {
             //printf("merging %i and %i\n", bestBlock2, bestBlock1);
             mergeBlocks(bestBlock1 , bestBlock2, blocksArray, arrayLength);
+
             deleteUselessData (blocksArray, arrayLength);
 
             updateCoveredPixels (width, height, coveredPixels, blocksArray, arrayLength);
+            
+            for (int i = 1; i < *arrayLength; i++) {
+                struct dataBlock *block = &(*blocksArray)[i];
+                for (int y = 0; y < (block->y2 + 1); y++) {
+                    for (int x = 0; x < (block->x2 + 1); x++) {
+                        blockOnPixels[x + block->x1][y + block->y1] = block;
+                    }
+                }
+            }
+
         } 
 
     }

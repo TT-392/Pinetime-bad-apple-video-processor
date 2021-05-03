@@ -7,7 +7,7 @@
 #include "pinencurses.h"
 
 int main() {
-    display_init();
+//    display_init();
     
 
 
@@ -15,19 +15,24 @@ int main() {
     file = fopen("output_compressed","rb");
     
 
-    while (1) {
+    int i = 0; 
+    //while (1) {
         struct dataBlock data = readBlock_compressed(file);
 
+        //if (i == 1)
+       //     break;
+        i++;
 
-        if (data.eof)
-            break;
+     //   if (data.eof)
+      //      break;
 
         if (data.newFrame)
             wait();
 
-        drawmono(data.x1, data.y1, data.x2+data.x1, data.y2+data.y1, data.bitmap);
-    }
+//        drawmono(data.x1, data.y1, data.x2+data.x1, data.y2+data.y1, data.bitmap);
+    //}
     fclose(file);
 
-    display_stop();
+    while (1);
+ //   display_stop();
 }
