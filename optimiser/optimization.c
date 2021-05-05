@@ -236,38 +236,30 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
                 topBottom = 1;
             if (sides == 0)
                 sides = 1;
-            
 
-            //for (int block2Nr = 0; block2Nr < *arrayLength; block2Nr++) {
             for (int y = 0; y < (block1.y2 + 1) + topBottom*2; y++) {
                 for (int x = 0; x < (block1.x2 + 1) + sides*2; x++) {
-                    //if (!((y >= topBottom && y <= topBottom + (block1.y2 + 1) - 1) ||
-                    //      (x >= sides && y <= sides + (block1.x2 + 1) - 1))) { // if not within block
                     int actualX = block1.x1 - sides + x;
                     int actualY = block1.y1 - topBottom + y;
                     if (actualX >= 0 && actualX < width && actualY >= 0 && actualY < height) {
                         for (int i = 0; i < blockOnPixels[actualX][actualY].arrayLength; i++) {
-                            //if (blockOnPixels[actualX][actualY] != &(*blocksArray)[block1Nr]) {
                             struct dataBlock block2 = *(blockOnPixels[actualX][actualY].blocks[i]);
                             int block2Nr = blockOnPixels[actualX][actualY].blocks[i] - (*blocksArray);
                             if (block1Nr != block2Nr) {
 
-                            //    printf("%i\t%i\n", block1Nr, block2Nr);
+                                int unmergedCost = block1Cost + blockCost(width, height, xorPixels, -1, coveredPixels, block2);
+                                int mergedCost = blockCost(width, height, xorPixels, unmergedCost, coveredPixels, combinedBlock(block1, block2));
 
-                            int unmergedCost = block1Cost + blockCost(width, height, xorPixels, -1, coveredPixels, block2);
-                            int mergedCost = blockCost(width, height, xorPixels, unmergedCost, coveredPixels, combinedBlock(block1, block2));
+                                int savedCost = unmergedCost - mergedCost;
+                                if (savedCost > maxSavedCost && mergedCost != -1) {
+                                    stuffToOptimize = 1;
 
-                            int savedCost = unmergedCost - mergedCost;
-                            if (savedCost > maxSavedCost && mergedCost != -1) {
-                                stuffToOptimize = 1;
-
-                                maxSavedCost = savedCost;
-                                bestBlock1 = block2Nr;
-                                bestBlock2 = block1Nr;
-                            }
+                                    maxSavedCost = savedCost;
+                                    bestBlock1 = block2Nr;
+                                    bestBlock2 = block1Nr;
+                                }
                             }
                         }
-                    //}
                     }
                 }
             }
@@ -376,8 +368,10 @@ nestedBreak:
             memcpy(*blocksArray, oldBlocks, (*arrayLength) * sizeof(struct dataBlock));
 
             (*blocksArray)[*arrayLength] = block;
+
             if (*arrayLength > 0)
                 free(oldBlocks);
+
             (*arrayLength)++;
         }
 
