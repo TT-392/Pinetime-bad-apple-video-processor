@@ -43,11 +43,11 @@ void printData (char* string) {
     }
 }
 
-void threadInfo(int *framesBeingProcessed) {
+void threadInfo(int *framesBeingProcessed, int start) {
     char string[200] = {'\0'};
 
     for (int i = 0; i < thread_count; i++) {
-        sprintf(string, "%s%i ", string, framesBeingProcessed[i]);
+        sprintf(string, "%s%i ", string, framesBeingProcessed[i] != -1? framesBeingProcessed[i] + start + 1 : -1);
     }
     printData(string);
 }
@@ -93,7 +93,7 @@ int main() {
     FILE *file;
     file = fopen("output","wb");
     
-    int start = 1;
+    int start = 80;
     int end = 100;
 
     readFrame(frameWidth, frameHeight, newFrame, start);
@@ -125,7 +125,6 @@ int main() {
     thrd_t t[thread_count];
 
     for (int i = start + 1; i < end; i++) {
-        threadInfo(framesBeingProcessed);
         int arrayIndex = i - start - 1;
 
         frames[arrayIndex].frameNr = i;
@@ -133,6 +132,8 @@ int main() {
 
         bool startedProcessing = 0;
         while (!startedProcessing) {
+            threadInfo(framesBeingProcessed, start);
+
             for (int thr = 0; thr < thread_count; thr++) {
                 int frame = framesBeingProcessed[thr];
                 if (frame == -1 || frames[frame].status == 1) { // if not busy
@@ -150,12 +151,23 @@ int main() {
         }
     }
 
-    for (int thr = 0; thr < thread_count; thr++) {
-        if (framesBeingProcessed[thr] != -1) {
-            int res;
-            thrd_join(t[thr], &res);
+    bool finished = 0;
+    while (!finished) {
+        finished = 1;
+        for (int thr = 0; thr < thread_count; thr++) {
+            int frame = framesBeingProcessed[thr];
+            if (frame != -1) {
+                finished = 0;
+            }
+            if (frame != -1 && frames[frame].status == 1) {
+                int res;
+                thrd_join(t[thr], &res);
+                framesBeingProcessed[thr] = -1;
+            }
+            threadInfo(framesBeingProcessed, start);
         }
     }
+    printf("\n");
 
     for (int i = start + 1; i < end; i++) {
         int arrayIndex = i - start - 1;
