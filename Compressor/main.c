@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fileHandling.h"
+#include "compression.h"
 
 int main() {
     FILE *infile;
@@ -15,14 +16,22 @@ int main() {
     int i = 0;
     while (1) {
         struct dataBlock data = readBlock(infile);
-        
+
         if (data.eof)
             break;
 
-        printf("%i\n", i);
-        i++;
+        bool optimized = 0;
+        int lengthInBits = (data.x2 + 1) * (data.y2 + 1);
+
+     //   runLength_encode(&lengthInBits, data.bitmap, &optimized);
+
+        data.runLength_encoded = optimized;
 
         writeBlock_compressed (data, outfile);
+        free(data.bitmap);
+
+        printf("%i\n", i);
+        i++;
     }
 
     fclose(infile);

@@ -44,3 +44,12 @@ sum: 2236ac5f6a9e638d00e99897da29e53c686774af
 // frame 357-358 old algo
 time: 72.61 mins 
 sum: b971a8ff84389df0f5b3b5ecf40363eb894e31fa 
+
+// frame 1-500 + multithreading
+________________________________________________________
+Executed in  157.26 mins    fish           external
+   usr time  1649.29 mins  606.00 micros  1649.29 mins
+   sys time   47.70 mins   95.00 micros   47.70 mins
+sum: b1a8a5b00bd2c0cfe0e1adf94a730090219b7f2b
+
+
