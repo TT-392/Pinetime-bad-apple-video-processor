@@ -93,8 +93,8 @@ int main() {
     FILE *file;
     file = fopen("output","wb");
     
-    int start = 80;
-    int end = 100;
+    int start = 1;
+    int end = 500;
 
     readFrame(frameWidth, frameHeight, newFrame, start);
     struct dataBlock block = {0};
