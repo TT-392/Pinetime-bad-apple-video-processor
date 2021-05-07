@@ -81,6 +81,7 @@ struct dataBlock readBlock_compressed(FILE *file) {
     retval.newFrame = (uint8_t)c & 1;
     retval.runLength_encoded = ((uint8_t)c >> 1) & 1;
     //printf("%i\n", (uint8_t)c); 
+    printf("%i\n", c);
 
     c = fgetc(file);
 
@@ -115,7 +116,6 @@ struct dataBlock readBlock_compressed(FILE *file) {
             for (int i = 0; i < c; i++) {
                 retval.bitmap[(bit + i)/8] |= 1 << (bit + i) % 8;
             }
-            printf("%i\n", c);
             bit += c;
         }
     } else {

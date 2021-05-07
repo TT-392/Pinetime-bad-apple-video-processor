@@ -28,7 +28,6 @@ void runLength_encode(int *lengthInBits, uint8_t *bitmap, bool *optimized) {
             compressedBMP[flips++] = 0;
             sameBits = 0;
         }
-        
         sameBits++;
         lastBit = currentBit;
     }
@@ -40,6 +39,5 @@ void runLength_encode(int *lengthInBits, uint8_t *bitmap, bool *optimized) {
         }
         *lengthInBits = flips*8;
         *optimized = 1;
-
     } 
 }
