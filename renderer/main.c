@@ -7,8 +7,7 @@
 #include "pinencurses.h"
 
 int main() {
-    //display_init();
-    
+    display_init();
 
 
     FILE *file;
@@ -25,9 +24,9 @@ int main() {
         if (data.newFrame)
             wait();
 
-        //drawmono(data.x1, data.y1, data.x2+data.x1, data.y2+data.y1, data.bitmap);
+        drawmono(data.x1, data.y1, data.x2+data.x1, data.y2+data.y1, data.bitmap);
     }
     fclose(file);
 
-    //display_stop();
+    display_stop();
 }

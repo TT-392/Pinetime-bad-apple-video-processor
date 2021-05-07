@@ -23,8 +23,7 @@ int main() {
         bool optimized = 0;
         int lengthInBits = (data.x2 + 1) * (data.y2 + 1);
 
-        runLength_encode(&lengthInBits, data.bitmap, &optimized);
-     //   runLength_encode(&lengthInBits, data.bitmap, &optimized);
+//        runLength_encode(&lengthInBits, data.bitmap, &optimized);
 
         data.runLength_encoded = optimized;
 
