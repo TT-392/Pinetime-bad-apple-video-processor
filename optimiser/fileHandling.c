@@ -14,7 +14,29 @@ int writeBlock_compressed (struct dataBlock data, FILE *file) {
         shortCoords = 1;
     }
 
-    fputc(data.newFrame | data.runLength_encoded << 1 | shortCoords << 2, file);
+    static bool once = 1;
+    static uint8_t byte = 0;
+    static int bit = 0;
+    static fpos_t pos;
+
+    if (once) {
+        fgetpos(file, &pos);
+        fputc(0, file); // placeholder 
+        once = 0;
+    }
+    if (bit != 8) {
+        byte |= (data.newFrame | shortCoords << 1) << bit;
+        bit += 2;
+    } else {
+        fpos_t tempPos;
+        fgetpos(file, &tempPos);
+        fsetpos(file, &pos);
+        fputc(byte, file);
+        fsetpos(file, &tempPos);
+        fputc(0, file); //p plaseholder
+        tempPos = pos;
+        bit = 0;
+    }
 
     fputc(data.x1, file);
     fputc(data.y1, file);
@@ -25,7 +47,6 @@ int writeBlock_compressed (struct dataBlock data, FILE *file) {
         fputc(data.x2, file);
         fputc(data.y2, file);
     }
-
 
     if (data.runLength_encoded) {
         int sizeInBits = (data.x2+1) * (data.y2+1);
@@ -86,11 +107,15 @@ struct dataBlock readBlock_compressed(FILE *file) {
     struct dataBlock retval = {};
     retval.eof = 0;
 
-    uint8_t c = fgetc(file);
+    static uint8_t byte = 0;
+    static int bit = 8;
 
-    retval.newFrame = (uint8_t)c & 1;
-    retval.runLength_encoded = ((uint8_t)c >> 1) & 1;
-    bool shortCoords = (c >> 2) & 1;
+    if (bit == 8) {
+        uint8_t byte = fgetc(file);
+        retval.newFrame = c & 1;
+        bool shortCoords = (c >> 1) & 1;
+    }
+
     //printf("%i\n", (uint8_t)c); 
 
     c = fgetc(file);

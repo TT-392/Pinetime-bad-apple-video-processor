@@ -52,4 +52,11 @@ Executed in  157.26 mins    fish           external
    sys time   47.70 mins   95.00 micros   47.70 mins
 sum: b1a8a5b00bd2c0cfe0e1adf94a730090219b7f2b
 
+// frame 1 - 6571 + multithreading 50% cutoff no dithering
+________________________________________________________
+Executed in   92.72 mins    fish           external
+   usr time  1342.43 mins    1.44 millis  1342.43 mins
+   sys time   35.55 mins    0.70 millis   35.55 mins
+sum: e94b94806192227ad35a6e9e8b17b0b291f17e81
+
 

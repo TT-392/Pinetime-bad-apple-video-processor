@@ -94,7 +94,7 @@ int main() {
     file = fopen("output","wb");
     
     int start = 1;
-    int end = 500;
+    int end = 6572;
 
     readFrame(frameWidth, frameHeight, newFrame, start);
     struct dataBlock block = {0};
