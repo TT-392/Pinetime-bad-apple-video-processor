@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "fileHandling.h"
-#include "compression.h"
 
 int main() {
     FILE *infile;
