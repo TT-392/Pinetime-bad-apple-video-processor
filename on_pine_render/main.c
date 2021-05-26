@@ -14,8 +14,5 @@ int main() {
     render_video();
 
 
-    
-
-
     display_stop();
 }

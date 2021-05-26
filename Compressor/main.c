@@ -30,7 +30,10 @@ int main() {
         writeBlock_compressed (data, outfile);
         free(data.bitmap);
 
-        printf("%i\n", i);
+        //printf("%i\n", i);
+        //if (i == 600000) {
+        //    break;
+        //}
         i++;
     }
 

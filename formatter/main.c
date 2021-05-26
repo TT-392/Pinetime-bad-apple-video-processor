@@ -9,8 +9,6 @@ int main() {
     FILE *infile;
     infile = fopen("output_compressed","rb");
 
-    FILE *outfile;
-    outfile = fopen("video.h","w");
 
     int i = 0;
     fseek(infile, 0, SEEK_END);
@@ -19,26 +17,38 @@ int main() {
 
     fseek(infile, 0, SEEK_SET);
 
-    char buffer [100];
-    fprintf(outfile, "#include <stdint.h>\n\nint videooLength = %i;\nconst uint8_t video[%i] = {\n", fileSize, fileSize);
     
 
+    int dataSize = 0x1000*120;
+
+
     int c = fgetc(infile);
-    for (int i = 0; i < fileSize; i++) {
-        fprintf(outfile, "0x%02x", c);
-        c = fgetc(infile);
+    for (int j = 0; j < fileSize / dataSize; j++) {
+        FILE *outfile;
+        char fileName[30];
+        sprintf(fileName, "video_%i.h", j);
+        outfile = fopen(fileName,"w");
+        char buffer [100];
+        fprintf(outfile, "#include <stdint.h>\n\nint videoLength = %i;\nconst uint8_t video[%i] = {\n", dataSize, dataSize);
 
-        if (i != fileSize -1)
-            fprintf(outfile, ",");
 
-        if ((i + 1) % 16 == 0)
-            fprintf(outfile, "\n");
+        for (int i = 0; i < dataSize; i++) {
+            fprintf(outfile, "0x%02x", c);
+            c = fgetc(infile);
+
+            if (i != dataSize - 1)
+                fprintf(outfile, ",");
+
+            if ((i + 1) % 16 == 0)
+                fprintf(outfile, "\n");
+        }
+        // insert code to write remaining data
+
+        fprintf(outfile, "};");
+        fclose(outfile);
     }
-
-    fprintf(outfile, "};");
 
 
 
     fclose(infile);
-    fclose(outfile);
 }

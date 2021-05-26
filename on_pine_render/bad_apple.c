@@ -17,16 +17,18 @@ struct dataBlock {
     uint8_t* bitmap;
 };
 
-static int index = 100000;
+static int index = 0;
 struct dataBlock readBlock() {
     struct dataBlock retval = {};
 
     retval.eof = 0;
 
-    if (index > 200000)
-        retval.eof = 1;
+//    if (index > 90000)
+//        retval.eof = 1;
 
-    retval.newFrame = video[index];
+    uint8_t c = video[index];
+    retval.newFrame = c & 1;
+    bool shortCoords = (c >> 2) & 1;
     index++;
 
     retval.x1 = video[index];
@@ -35,11 +37,18 @@ struct dataBlock readBlock() {
     retval.y1 = video[index];
     index++;
 
-    retval.x2 = video[index];
-    index++;
+    if (shortCoords) {
+        c = video[index];
+        index++;
+        retval.x2 = c & 0xf;
+        retval.y2 = (c >> 4) & 0xf;
+    } else {
+        retval.x2 = video[index];
+        index++;
 
-    retval.y2 = video[index];
-    index++;
+        retval.y2 = video[index];
+        index++;
+    }
 
     int blockSize = ((retval.x2+1) * (retval.y2+1) + 7) / 8; // bytes rounded up
 
@@ -64,5 +73,6 @@ void render_video() {
         if (data.newFrame);
 
         drawMono(data.x1, data.y1, data.x2+data.x1, data.y2+data.y1, data.bitmap, 0xffff, 0x0000);
+        free(data.bitmap);
     }
 }
