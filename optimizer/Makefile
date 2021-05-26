@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-pthread
+CFLAGS=-pthread -fsanitize=address
 DEPS = fileHandling.h optimization.h utils.h struct.h
 OBJ = main.o fileHandling.o utils.o optimization.o
 

@@ -55,31 +55,39 @@ void threadInfo(int *framesBeingProcessed, int start) {
 int thread(void *arg) {
     struct frameData *data = ((struct frameData*)arg);
 
+    char filename[30];
+    sprintf(filename, "output/frame%i", data->frameNr);
+    FILE *file = fopen(filename,"wb");
 
     bool frameBeingOverwritten[frameWidth][frameHeight] = {};
-
     bool newFrame[frameWidth][frameHeight] = {};
-
     readFrame(frameWidth, frameHeight, frameBeingOverwritten, data->frameNr - 1);
-
     readFrame(frameWidth, frameHeight, newFrame, data->frameNr);
 
     struct dataBlock *blocksPointer;
     struct dataBlock **blocks = &blocksPointer;
-
     int blocksLength = 0;
 
     findSimpleBlocks(frameWidth, frameHeight, frameBeingOverwritten, newFrame, blocks, &blocksLength);
-
     optimizeBlocks(frameWidth, frameHeight, frameBeingOverwritten, newFrame, blocks, &blocksLength);
 
-    data->blocksLength = blocksLength;
+    for (int j = 0; j < blocksLength;  j++) {
+        (*blocks)[j].bitmap = malloc(sizeof(uint8_t) * ((((*blocks)[j].x2 + 1) * ((*blocks)[j].y2 + 1) - 1) / 8 + 1));
 
-    if (blocksLength > 0)
-        data->blocks = *blocks;
+        if (j == 0) {
+            (*blocks)[j].newFrame = 1;
+        } else {
+            (*blocks)[j].newFrame = 0;
+        }
+
+        fillBlock(frameWidth, frameHeight, newFrame, &(*blocks)[j]);
+        writeBlock((*blocks)[j], file);
+        free((*blocks)[j].bitmap);
+    }
+    free(*blocks);
+    fclose(file);
 
     data->status = 1;
-
     return 0;
 }
 
@@ -90,12 +98,16 @@ int main() {
 
     bool newFrame[frameWidth][frameHeight] = {};
 
-    FILE *file;
-    file = fopen("output","wb");
-    
     int start = 1;
-    int end = 6572;
-
+//    int end = 6572;
+    int end = 1000;
+    
+    /////////////////
+    // first frame //
+    /////////////////
+    FILE *file;
+    file = fopen("output/frame1","wb");
+    
     readFrame(frameWidth, frameHeight, newFrame, start);
     struct dataBlock block = {0};
     block.x1 = 0;
@@ -114,7 +126,8 @@ int main() {
             frameBeingOverwritten[x][y] = newFrame[x][y];
         }
     }
-
+    fclose(file);
+    /////////////////
 
     struct frameData frames[end - start - 1];
     int framesBeingProcessed[thread_count];
@@ -167,28 +180,23 @@ int main() {
             threadInfo(framesBeingProcessed, start);
         }
     }
-    printf("\n");
 
-    for (int i = start + 1; i < end; i++) {
-        int arrayIndex = i - start - 1;
-        readFrame(frameWidth, frameHeight, newFrame, i);
+    file = fopen("output/full","wb");
+    for (int i = start; i < end; i++) {
+        char filename[30];
+        sprintf(filename, "output/frame%i", i);
+        FILE *infile = fopen(filename,"rb");
 
-        printf("%i\n", i);//frames[arrayIndex].blocksLength);
-
-        for (int j = 0; j < frames[arrayIndex].blocksLength;  j++) {
-            frames[arrayIndex].blocks[j].bitmap = bitmap;
-
-            if (j == 0) {
-                frames[arrayIndex].blocks[j].newFrame = 1;
-            } else {
-                frames[arrayIndex].blocks[j].newFrame = 0;
-            }
-
-            fillBlock(frameWidth, frameHeight, newFrame, &frames[arrayIndex].blocks[j]);
-
-            writeBlock(frames[arrayIndex].blocks[j], file);
+        printf(filename);
+        printf("\n");
+        int c = fgetc(infile);
+        while (c != EOF) {
+            fputc(c, file);
+            c = fgetc(infile);
         }
+        printf("\n");
+        fclose(infile);
     }
-
     fclose(file);
+    printf("\n");
 }

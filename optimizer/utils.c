@@ -37,7 +37,6 @@ void readFrame(int width, int height, bool frame[width][height], int frameNr) {
 }
 
 void fillBlock(int width, int height, bool frame[width][height], struct dataBlock* block) {
-
     for (int i = 0; i < ((block->y2+1) * (block->x2+1) - 1) / 8 + 1; i++) {
         block->bitmap[i] = 0x00;
     }

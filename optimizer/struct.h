@@ -9,9 +9,7 @@ struct dataBlock {
     int y2;
 
     bool newFrame;
-
     bool runLength_encoded;
-
     bool eof;
 
     uint8_t* bitmap;

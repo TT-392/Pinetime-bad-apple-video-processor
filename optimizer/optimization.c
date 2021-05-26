@@ -111,7 +111,7 @@ void deleteUselessData (struct dataBlock **blocksArray, int *arrayLength) {
                     //printf("shrinking block\n");
                 } else if (overlap == 0xf) {
                     //printf("deleting useless block\n");
-                    memcpy(&(*blocksArray)[i], &(*blocksArray)[i + 1], ((*arrayLength) - (i + 1))*sizeof(struct dataBlock));
+                    memmove(&(*blocksArray)[i], &(*blocksArray)[i + 1], ((*arrayLength) - (i + 1))*sizeof(struct dataBlock));
                     (*arrayLength)--;
                     i--;
                     j--;
@@ -162,7 +162,7 @@ void mergeBlocks(int block1, int block2, struct dataBlock **blocksArray, int *ar
 
     (*blocksArray)[firstBlock] = combinedBlock((*blocksArray)[block1], (*blocksArray)[block2]);
 
-    memcpy(&(*blocksArray)[secondBlock], &(*blocksArray)[secondBlock + 1], ((*arrayLength) - secondBlock - 1)*sizeof(struct dataBlock));
+    memmove(&(*blocksArray)[secondBlock], &(*blocksArray)[secondBlock + 1], ((*arrayLength) - secondBlock - 1)*sizeof(struct dataBlock));
 
     (*arrayLength)--;
 }
@@ -293,6 +293,11 @@ void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][he
         } 
 
     }
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            free(blockOnPixels[x][y].blocks);
+        }
+    }
 }
 
 void findSimpleBlocks (int width, int height, bool frameBeingOverwritten[width][height], bool overwritingFrame[width][height], struct dataBlock **blocksArray, int *arrayLength) {
@@ -329,20 +334,25 @@ nestedBreak:
         if (!stuffChanging)
             break;
 
-        while (xorPixels[block.x1+block.x2+1][block.y1] && block.x1 + block.x2 + 1 < width) {
-            block.x2++;
+        while (block.x1 + block.x2 + 1 < width) {
+            if (xorPixels[block.x1 + block.x2 + 1][block.y1])
+                block.x2++;
+            else
+                break;
         }
-
 
         int unchangedPixels = 0;
 
         while (unchangedPixels == 0 && block.y1 + block.y2 < height) {
             block.y2++;
-            for (int x = 0; x < block.x2+1; x++) {
-                if (!xorPixels[block.x1+x][block.y1+block.y2]) {
-                    unchangedPixels++;
+            if (block.y2 + block.y1 < height) {
+                for (int x = 0; x < block.x2+1; x++) {
+                    if (!xorPixels[block.x1+x][block.y1+block.y2]) {
+                        unchangedPixels++;
+                    }
                 }
-            }
+            } else
+                break;
         }
         block.y2--;
 
