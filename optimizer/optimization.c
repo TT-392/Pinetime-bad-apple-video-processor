@@ -35,6 +35,28 @@ int blockCost (int width, int height, bool xorPixels[width][height], int max, bo
     return cost;
 }
 
+int flipOptimize(int width, int height, bool frameBeingOverwritten[width][height], bool newFrame[width][height]) {
+    int pixCnt = width * height;
+    int flippedCnt = 0;
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if (frameBeingOverwritten[x][y] != newFrame[x][y]) {
+                flippedCnt++;
+            }
+        }
+    }
+    if (flippedCnt > (pixCnt / 2)) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                newFrame[x][y] = !newFrame[x][y];
+            }
+        }
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 int overlappingCorners (struct dataBlock block1, struct dataBlock block2) {
     uint64_t startTime = getTimeNS();
     int retval = 0;

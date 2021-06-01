@@ -19,7 +19,11 @@
 
 #define thread_count 16
 
-    
+#define STATUS_FINISHED 1
+#define STATUS_START 0
+#define STATUS_START_FLIPPED 2
+#define STATUS_FLIPPED 3
+#define STATUS_NOTFLIPPED 4
 struct frameData {
     struct dataBlock *blocks;
     int blocksLength;
@@ -64,11 +68,21 @@ int thread(void *arg) {
     readFrame(frameWidth, frameHeight, frameBeingOverwritten, data->frameNr - 1);
     readFrame(frameWidth, frameHeight, newFrame, data->frameNr);
 
+    bool startFlip = 0;
+    if (data->status == STATUS_START_FLIPPED)
+        startFlip = 1;
+
+    bool frameFlip = flipOptimize(frameWidth, frameHeight, frameBeingOverwritten, newFrame);
+    if (frameFlip) data->status = STATUS_FLIPPED;
+    else
+        data->status = STATUS_NOTFLIPPED;
+
     struct dataBlock *blocksPointer;
     struct dataBlock **blocks = &blocksPointer;
     int blocksLength = 0;
 
     findSimpleBlocks(frameWidth, frameHeight, frameBeingOverwritten, newFrame, blocks, &blocksLength);
+
     optimizeBlocks(frameWidth, frameHeight, frameBeingOverwritten, newFrame, blocks, &blocksLength);
 
     for (int j = 0; j < blocksLength;  j++) {
@@ -76,20 +90,26 @@ int thread(void *arg) {
 
         if (j == 0) {
             (*blocks)[j].newFrame = 1;
+            if (startFlip)
+                (*blocks)[j].flipped = 1;
+            else 
+                (*blocks)[j].flipped = 0;
         } else {
             (*blocks)[j].newFrame = 0;
+            (*blocks)[j].flipped = 0;
         }
 
-        fillBlock(frameWidth, frameHeight, newFrame, &(*blocks)[j]);
+        fillBlock(frameWidth, frameHeight, newFrame, &(*blocks)[j], startFlip);
         writeBlock((*blocks)[j], file);
         free((*blocks)[j].bitmap);
     }
     free(*blocks);
     fclose(file);
 
-    data->status = 1;
+    data->status = STATUS_FINISHED;
     return 0;
 }
+
 
 int main() {
     uint8_t bitmap[frameHeight*(frameWidth/8)] = {};
@@ -98,15 +118,18 @@ int main() {
 
     bool newFrame[frameWidth][frameHeight] = {};
 
-    int start = 1;
+    int start = 440;
 //    int end = 6572;
-    int end = 1000;
+    //int end = 445;
+    int end = 461;
     
     /////////////////
     // first frame //
     /////////////////
     FILE *file;
-    file = fopen("output/frame1","wb");
+    char filename[30];
+    sprintf(filename, "output/frame%i", start);
+    file = fopen(filename,"wb");
     
     readFrame(frameWidth, frameHeight, newFrame, start);
     struct dataBlock block = {0};
@@ -117,7 +140,7 @@ int main() {
     block.newFrame = 0;
     block.bitmap = startFrame;
 
-    fillBlock(frameWidth, frameHeight, newFrame, &block);
+    fillBlock(frameWidth, frameHeight, newFrame, &block, 0);
 
     writeBlock(block, file);
 
@@ -137,11 +160,16 @@ int main() {
 
     thrd_t t[thread_count];
 
+    bool flipped = 0;
     for (int i = start + 1; i < end; i++) {
         int arrayIndex = i - start - 1;
 
         frames[arrayIndex].frameNr = i;
-        frames[arrayIndex].status = 0;
+        if (!flipped)
+            frames[arrayIndex].status = STATUS_START;
+        else
+            frames[arrayIndex].status = STATUS_START_FLIPPED;
+
 
         bool startedProcessing = 0;
         while (!startedProcessing) {
@@ -149,12 +177,17 @@ int main() {
 
             for (int thr = 0; thr < thread_count; thr++) {
                 int frame = framesBeingProcessed[thr];
-                if (frame == -1 || frames[frame].status == 1) { // if not busy
+                if (frame == -1 || frames[frame].status == STATUS_FINISHED) {
                     if (frame != -1) {
                         int res;
                         thrd_join(t[thr], &res);
                     }
+
                     thrd_create(&t[thr], thread, &frames[arrayIndex]);
+
+                    while (!(frames[arrayIndex].status == STATUS_FLIPPED || frames[arrayIndex].status == STATUS_NOTFLIPPED));
+                    if (frames[arrayIndex].status == STATUS_FLIPPED)
+                        flipped = !flipped;
 
                     framesBeingProcessed[thr] = arrayIndex;
                     startedProcessing = 1;

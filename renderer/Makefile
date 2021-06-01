@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -lncursesw
+CFLAGS= -lncursesw -fsanitize=address
 DEPS = fileHandling.h struct.h pinencurses.h
 OBJ = main.o fileHandling.o pinencurses.o
 

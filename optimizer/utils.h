@@ -3,7 +3,7 @@
 
 uint64_t getTimeNS();
 
-void fillBlock(int width, int height, bool frame[width][height], struct dataBlock* block);
+void fillBlock(int width, int height, bool frame[width][height], struct dataBlock* block, int flip);
 
 void readFrame(int width, int height, bool frame[width][height], int frameNr);
 

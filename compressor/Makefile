@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=
+CFLAGS= -fsanitize=address
 DEPS = fileHandling.h struct.h
 OBJ = main.o fileHandling.o
 

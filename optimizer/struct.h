@@ -9,6 +9,7 @@ struct dataBlock {
     int y2;
 
     bool newFrame;
+    bool flipped;
     bool runLength_encoded;
     bool eof;
 

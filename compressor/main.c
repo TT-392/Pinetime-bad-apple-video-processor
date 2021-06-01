@@ -7,7 +7,7 @@
 
 int main() {
     FILE *infile;
-    infile = fopen("output","rb");
+    infile = fopen("full","rb");
 
     FILE *outfile;
     outfile = fopen("output_compressed","wb");

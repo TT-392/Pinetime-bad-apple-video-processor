@@ -7,3 +7,5 @@ void findSimpleBlocks(int width, int height, bool frameBeingOverwritten[width][h
 
 void optimizeBlocks (int width, int height, bool frameBeingOverwritten[width][height], bool overwritingFrame[width][height], struct dataBlock **blocksArray, int *arrayLength);
 
+int flipOptimize(int width, int height, bool frameBeingOverwritten[width][height], bool newFrame[width][height]);
+

@@ -75,36 +75,55 @@ struct dataBlock readBlock_compressed(FILE *file) {
     retval.eof = 0;
 
     uint8_t c = fgetc(file);
+    if (c == EOF) {
+        retval.eof = 1;
+        return retval;
+    }
 
     retval.newFrame = (uint8_t)c & 1;
-    retval.runLength_encoded = ((uint8_t)c >> 1) & 1;
+    //retval.runLength_encoded = ((uint8_t)c >> 1) & 1;
     bool shortCoords = (c >> 2) & 1;
-    //printf("%i\n", (uint8_t)c); 
 
     c = fgetc(file);
+    if (c == EOF) {
+        retval.eof = 1;
+        return retval;
+    }
 
     retval.x1 = (uint8_t)c;
-    //printf("%i\n", (uint8_t)c); 
 
     c = fgetc(file);
+    if (c == EOF) {
+        retval.eof = 1;
+        return retval;
+    }
 
     retval.y1 = (uint8_t)c;
-    ///printf("%i\n", (uint8_t)c); 
 
     if (shortCoords) {
         c = fgetc(file);
+        if (c == EOF) {
+            retval.eof = 1;
+            return retval;
+        }
         retval.x2 = c & 0xf;
         retval.y2 = (c >> 4) & 0xf;
     } else {
         c = fgetc(file);
+        if (c == EOF) {
+            retval.eof = 1;
+            return retval;
+        }
 
         retval.x2 = (uint8_t)c;
-        //printf("%i\n", (uint8_t)c); 
 
         c = fgetc(file);
+        if (c == EOF) {
+            retval.eof = 1;
+            return retval;
+        }
 
         retval.y2 = (uint8_t)c;
-        ///printf("%i\n", (uint8_t)c); 
     }
 
 
@@ -129,6 +148,10 @@ struct dataBlock readBlock_compressed(FILE *file) {
 
         for (int i = 0; i < blockSize + 7 / 8; i++) {
             retval.bitmap[i] = fgetc(file);
+            if (c == EOF) {
+                retval.eof = 1;
+                return retval;
+            }
             //printf("%i\n", i);
             //printf("%i\n", retval.bitmap[i]);
         }
