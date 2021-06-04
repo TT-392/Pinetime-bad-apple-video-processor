@@ -3,41 +3,49 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "struct.h"
 #include "fileHandling.h"
 
 int writeBlock_compressed (struct dataBlock data, FILE *file) {
-    char buffer[50];
-
-    bool shortCoords = 0;
-    if (data.x2 <= 0xf && data.y2 <= 0xf) {
-        shortCoords = 1;
-    }
-
-    fputc(data.newFrame | data.runLength_encoded << 1 | shortCoords << 2, file);
-
-    fputc(data.x1, file);
-    fputc(data.y1, file);
-
-    if (shortCoords) {
-        fputc(data.x2 | (data.y2 << 4), file);
+    if (data.staticFrames) {
+        assert(data.staticAmount < 0xff);
+        fputc(1 << 3, file);
+        fputc(data.staticAmount, file);
     } else {
-        fputc(data.x2, file);
-        fputc(data.y2, file);
+        bool shortCoords = 0;
+        if (data.x2 <= 0xf && data.y2 <= 0xf) {
+            shortCoords = 1;
+        }
+
+        fputc(data.newFrame | data.flipped << 1 | shortCoords << 2, file);
+
+        fputc(data.x1, file);
+        fputc(data.y1, file);
+
+        if (shortCoords) {
+            fputc(data.x2 | (data.y2 << 4), file);
+        } else {
+            fputc(data.x2, file);
+            fputc(data.y2, file);
+        }
+
+
+        int blockSize = ((data.x2+1) * (data.y2+1) + 7) / 8; // bytes rounded up
+
+        for (int i = 0; i < blockSize; i++) {
+            fputc(data.bitmap[i], file);
+        }
     }
-
-
-    int blockSize = ((data.x2+1) * (data.y2+1) + 7) / 8; // bytes rounded up
-
-    for (int i = 0; i < blockSize; i++) {
-        fputc(data.bitmap[i], file);
-    }
-
 }
 
 int writeBlock(struct dataBlock data, FILE *file) {
     char buffer[50];
     sprintf(buffer, "%i",data.newFrame);
+    fputs(buffer, file);
+    fputs("\n", file);
+
+    sprintf(buffer, "%i",data.flipped);
     fputs(buffer, file);
     fputs("\n", file);
 
@@ -81,8 +89,14 @@ struct dataBlock readBlock_compressed(FILE *file) {
     }
 
     retval.newFrame = (uint8_t)c & 1;
-    //retval.runLength_encoded = ((uint8_t)c >> 1) & 1;
     bool shortCoords = (c >> 2) & 1;
+    retval.flipped = (c >> 1) & 1;
+    retval.staticFrames = (c >> 3) & 1;
+    
+    if (retval.staticFrames) {
+        retval.staticAmount = fgetc(file);
+        return retval;
+    }
 
     c = fgetc(file);
     if (c == EOF) {
@@ -163,67 +177,84 @@ struct dataBlock readBlock_compressed(FILE *file) {
 
 struct dataBlock readBlock(FILE *file) {
     struct dataBlock retval = {};
-    retval.newFrame = fgetc(file) == '1' ? 1 : 0;
-    fgetc(file);
 
-    retval.eof = 0;
+    char c = getc(file);
+    if (c == 's') {
+        retval.staticFrames = 1;
+        c = fgetc(file); // \n
+        c = getc(file);
+        retval.staticAmount = 0;
+        while (c != '\n') {
+            retval.staticAmount *= 10;
+            retval.staticAmount += c - '0';
+            c = fgetc(file);
+        }
+    } else {
+        retval.newFrame = c == '1' ? 1 : 0;
+        fgetc(file); // \n
 
-    char c = fgetc(file);
+        retval.flipped = fgetc(file) == '1' ? 1 : 0;
+        fgetc(file); // \n
 
-    if (c == EOF) {
-        retval.eof = 1;
-        return retval;
-    }
+        retval.eof = 0;
 
-    while (c != '\n') {
-        retval.x1 *= 10;
-        retval.x1 += c - '0';
         c = fgetc(file);
-    }
 
-    c = fgetc(file);
-    if (c == EOF) {
-        retval.eof = 1;
-        return retval;
-    }
+        if (c == EOF) {
+            retval.eof = 1;
+            return retval;
+        }
 
-    while (c != '\n') {
-        retval.y1 *= 10;
-        retval.y1 += c - '0';
+        while (c != '\n') {
+            retval.x1 *= 10;
+            retval.x1 += c - '0';
+            c = fgetc(file);
+        }
+
         c = fgetc(file);
-    }
-    
-    c = fgetc(file);
-    if (c == EOF) {
-        retval.eof = 1;
-        return retval;
-    }
-    while (c != '\n') {
-        retval.x2 *= 10;
-        retval.x2 += c - '0';
+        if (c == EOF) {
+            retval.eof = 1;
+            return retval;
+        }
+
+        while (c != '\n') {
+            retval.y1 *= 10;
+            retval.y1 += c - '0';
+            c = fgetc(file);
+        }
+
         c = fgetc(file);
-    }
-    
-    c = fgetc(file);
-    if (c == EOF) {
-        retval.eof = 1;
-        return retval;
-    }
-    while (c != '\n') {
-        retval.y2 *= 10;
-        retval.y2 += c - '0';
+        if (c == EOF) {
+            retval.eof = 1;
+            return retval;
+        }
+        while (c != '\n') {
+            retval.x2 *= 10;
+            retval.x2 += c - '0';
+            c = fgetc(file);
+        }
+
         c = fgetc(file);
+        if (c == EOF) {
+            retval.eof = 1;
+            return retval;
+        }
+        while (c != '\n') {
+            retval.y2 *= 10;
+            retval.y2 += c - '0';
+            c = fgetc(file);
+        }
+
+        int blockSize = ((retval.x2+1) * (retval.y2+1) + 7) / 8; // bytes rounded up
+
+        retval.bitmap = malloc(blockSize);
+
+        for (int i = 0; i < blockSize; i++) {
+            retval.bitmap[i] = fgetc(file);
+        }
+
+        fgetc(file);
     }
-    
-    int blockSize = ((retval.x2+1) * (retval.y2+1) + 7) / 8; // bytes rounded up
-
-    retval.bitmap = malloc(blockSize);
-
-    for (int i = 0; i < blockSize; i++) {
-        retval.bitmap[i] = fgetc(file);
-    }
-
-    fgetc(file);
     
     return retval;
 }

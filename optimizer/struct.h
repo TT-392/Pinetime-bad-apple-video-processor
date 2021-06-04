@@ -12,6 +12,8 @@ struct dataBlock {
     bool flipped;
     bool runLength_encoded;
     bool eof;
+    bool staticFrames;
+    int staticAmount;
 
     uint8_t* bitmap;
 };

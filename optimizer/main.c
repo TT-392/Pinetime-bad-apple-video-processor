@@ -90,7 +90,7 @@ int thread(void *arg) {
 
         if (j == 0) {
             (*blocks)[j].newFrame = 1;
-            if (startFlip)
+            if (frameFlip)
                 (*blocks)[j].flipped = 1;
             else 
                 (*blocks)[j].flipped = 0;
@@ -118,15 +118,16 @@ int main() {
 
     bool newFrame[frameWidth][frameHeight] = {};
 
-    int start = 440;
-//    int end = 6572;
+    int start = 1;
+    int end = 6572;
     //int end = 445;
-    int end = 461;
+//    int end = 461;
     
     /////////////////
     // first frame //
     /////////////////
     FILE *file;
+    /*
     char filename[30];
     sprintf(filename, "output/frame%i", start);
     file = fopen(filename,"wb");
@@ -213,8 +214,10 @@ int main() {
             threadInfo(framesBeingProcessed, start);
         }
     }
+    */
 
     file = fopen("output/full","wb");
+    int staticFrameCount = 0;
     for (int i = start; i < end; i++) {
         char filename[30];
         sprintf(filename, "output/frame%i", i);
@@ -223,6 +226,18 @@ int main() {
         printf(filename);
         printf("\n");
         int c = fgetc(infile);
+        if (c == EOF) {
+            // empty file
+            staticFrameCount++;
+            printf("empty\n");
+        } else {
+            if (staticFrameCount != 0) {
+                // after last empty file
+                fprintf(file, "s\n%i\n", staticFrameCount);
+                staticFrameCount = 0;
+            }
+            printf("not empty\n");
+        }
         while (c != EOF) {
             fputc(c, file);
             c = fgetc(infile);
@@ -230,6 +245,12 @@ int main() {
         printf("\n");
         fclose(infile);
     }
+    if (staticFrameCount != 0) {
+        // after last empty file
+        fprintf(file, "s\n%i\n", staticFrameCount);
+        staticFrameCount = 0;
+    }
+
     fclose(file);
     printf("\n");
 }

@@ -17,14 +17,18 @@ int main() {
     while (1) {
         struct dataBlock data = readBlock_compressed(file);
 
-
         if (data.eof)
             break;
 
         if (data.newFrame)
             wait();
 
-        drawmono(data.x1, data.y1, data.x2+data.x1, data.y2+data.y1, data.bitmap);
+        if (!data.staticFrames)
+            drawmono(data.x1, data.y1, data.x2+data.x1, data.y2+data.y1, data.bitmap);
+        else {
+            for (int i = 0; i < data.staticAmount; i++)
+                wait();
+        }
     }
     fclose(file);
 

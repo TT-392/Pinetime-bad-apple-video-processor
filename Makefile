@@ -1,3 +1,9 @@
+formatter: formatter/formatter compressor/output_compressed
+	cd formatter && ./formatter
+
+formatter/formatter: formatter/*.c formatter/*.h
+	cd formatter && make
+
 compressor/output_compressed: optimizer/output/full compressor/compressor
 	cd compressor && ./compressor
 
