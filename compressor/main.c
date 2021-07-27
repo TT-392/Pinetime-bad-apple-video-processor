@@ -26,7 +26,7 @@ int main() {
 
         data.runLength_encoded = optimized;
 
-        writeBlock_compressed (data, outfile);
+        writeBlock_compressed(data, outfile);
         free(data.bitmap);
 
         //printf("%i\n", i);
