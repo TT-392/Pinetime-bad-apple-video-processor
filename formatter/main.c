@@ -17,7 +17,7 @@ int main() {
 
     
 
-    int dataSize = 0x1000*120;
+    int dataSize = 0x1000*74;
 
 
     int c = fgetc(infile);

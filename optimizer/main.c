@@ -127,7 +127,6 @@ int main() {
     // first frame //
     /////////////////
     FILE *file;
-    /*
     char filename[30];
     sprintf(filename, "output/frame%i", start);
     file = fopen(filename,"wb");
@@ -214,7 +213,6 @@ int main() {
             threadInfo(framesBeingProcessed, start);
         }
     }
-    */
 
     file = fopen("output/full","wb");
     int staticFrameCount = 0;

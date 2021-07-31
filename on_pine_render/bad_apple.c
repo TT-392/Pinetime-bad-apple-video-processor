@@ -54,7 +54,7 @@ struct dataBlock readBlock() {
 
     retval.bitmap = malloc(blockSize);
 
-    for (int i = 0; i < blockSize + 7 / 8; i++) {
+    for (int i = 0; i < blockSize; i++) {
         retval.bitmap[i] = video[index];
         index++;
     }
