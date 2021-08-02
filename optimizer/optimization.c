@@ -6,7 +6,7 @@
 #include "struct.h"
 #include "utils.h"
 
-#define newBlockCost 12 // the amount of time it costs for a new block to be written in units of time it takes to write a pixel
+#define newBlockCost 10 // see measurements folder
 
 static uint64_t blockCostTime = 0;
 static uint64_t overlappingCornersTime = 0;

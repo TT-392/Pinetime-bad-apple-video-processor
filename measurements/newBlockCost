@@ -1,0 +1,36 @@
+Tests were done with writing 1 pixel to the display, bytes:
+CMD_CASET;
+           
+x1 >> 8;
+x1 & 0xff;
+x2 >> 8;
+x2 & 0xff;
+           
+CMD_RASET;
+           
+y1 >> 8;
+y1 & 0xff;
+y2 >> 8;
+y2 & 0xff;
+           
+CMD_RAMWR;
+
+pixel msB
+pixel lsB
+
+Note that in the scope images, the cmd pin is shifted to the right, this is because this pin is sampled at the end of a byte, thus shifting this pin to the right improves stability of the experimental drive.
+
+There is an amount of time in which no pixels are sent. This time consists of the time it takes to send the CASET, RASET, their values, and the RAMWR command. And the time it takes to stop and start the spim driver. We'll call this time dead time.
+
+In image scope_1.png, it can be seen that it takes 16.7 us to write a pixel to the screen plus all of the neccesary dead time.
+In image scope_2.png, it can be seen that it takes 125 ns to write a bit of data, and because we are writing in 16 bit color mode, writing a pixel takes 16 * 0.125 = 2 us.
+
+The constant named newBlockCost in the code is the amount of dead time there is for any unit of pixel write time. In this case that would be.
+newBlockCost = (16.7 - 2) / 2 = 7.35
+
+Later, for optimization purposes, we switched to 12 bit color mode. This gives us a pixel time of 12 * 0.125 = 1.5us thus:
+newBlockCost = (16.7 - 1.5) / 1.5 = 10.13
+
+It is important to keep in mind the fact that a byte is always 8 bits, so writing one pixel in 12 bit color mode, still takes 2 bytes, but 2 pixels only take 3 bytes. So the more pixels you write to the screen, the closer you get to 12 bit per pixel. Though when writing an even amount of pixels, you will always be writing 12 bits per pixel.
+
+For these reasons a final newBlockCost of 10 is chosen.
