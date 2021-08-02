@@ -6,7 +6,7 @@
 #include "struct.h"
 #include "utils.h"
 
-#define newBlockCost 10 // see measurements folder
+#define newBlockCost 12 // see measurements folder
 
 static uint64_t blockCostTime = 0;
 static uint64_t overlappingCornersTime = 0;

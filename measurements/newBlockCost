@@ -33,4 +33,4 @@ newBlockCost = (16.7 - 1.5) / 1.5 = 10.13
 
 It is important to keep in mind the fact that a byte is always 8 bits, so writing one pixel in 12 bit color mode, still takes 2 bytes, but 2 pixels only take 3 bytes. So the more pixels you write to the screen, the closer you get to 12 bit per pixel. Though when writing an even amount of pixels, you will always be writing 12 bits per pixel.
 
-For these reasons a final newBlockCost of 10 is chosen.
+For these reasons a final newBlockCost of was originally chosen, though after some experimentation it turns out that this results in a slightly bigger output file, which makes it just a little too big to fit in the watch. The value used to be 12, just as a guess, this worked alright, so it was decided to go back to a value of 12.
