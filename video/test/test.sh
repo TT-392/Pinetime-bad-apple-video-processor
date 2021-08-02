@@ -8,8 +8,8 @@ for file in *.png; do
     fileNr=${fileNr%\.png}
     # area with faint stars
     if [ "$fileNr" = "00445" ]; then
-        threshold=20
-    elif [ $fileNr -gt 00755 -a $fileNr -lt 00771 ]; then
+        threshold=10
+    elif [ $fileNr -gt 00755 -a $fileNr -lt 00776 ]; then
         threshold=$((threshold+2))
     fi
     echo $fileNr $threshold
