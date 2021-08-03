@@ -7,7 +7,7 @@
 
 int main() {
     FILE *infile;
-    infile = fopen("output_compressed.lz4","rb");
+    infile = fopen("bad_apple.lz4","rb");
 
 
     int i = 0;

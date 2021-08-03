@@ -1,13 +1,13 @@
-formatter: formatter/formatter compressor/output_compressed.lz4
+formatter: formatter/formatter compressor/bad_apple.lz4
 	cd formatter && ./formatter
 
 formatter/formatter: formatter/*.c formatter/*.h
 	cd formatter && make
 
-compressor/output_compressed.lz4: compressor/output_compressed
-	yes | lz4 -12 -B10000 compressor/output_compressed compressor/output_compressed.lz4
+compressor/bad_apple.lz4: compressor/output_compressed
+	yes | lz4 -12 -B10000 compressor/output_compressed compressor/bad_apple.lz4
 
-compressor/output_compressed: optimizer/output/full compressor/compressor
+compressor/output_compressed: compressor/compressor optimizer/output/full 
 	cd compressor && ./compressor
 
 compressor/compressor: compressor/*.c compressor/*.h
