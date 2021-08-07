@@ -6,7 +6,7 @@ For instructions on this step, go to: https://github.com/TT-392/pinetime-bad-app
 
 ## Compiling
 (This guide assumes you are running linux, it might work on a different platform, but I can't guarantee it)\
-While I was creating this program, I didn't really intend for anyone to use it with a different video, so if you really want to do this, I expect you to somewhat know what you are doing.
+While I was creating this program, I didn't really intend for anyone to use it with a different video, so if you really want to do this, I expect you to be somewhat compitent, in terms of stuff like having some programming experience and stuff like that.
 
 To compile a video file, you first gotta turn your file into a 30 fps image sequence (I used ffmpeg for this).
 
