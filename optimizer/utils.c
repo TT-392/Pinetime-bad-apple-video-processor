@@ -21,7 +21,7 @@ void readFrame(int width, int height, bool frame[width][height], int frameNr) {
     FILE *input;
     char buffer[50];
     //sprintf(buffer, "../video/30fps/apple%05d.png.mono", frameNr);
-    sprintf(buffer, "../video/test/apple%05d.png.mono", frameNr);
+    sprintf(buffer, "../video/30fps/apple%05d.png.mono", frameNr);
 
     input = fopen(buffer, "rb");
     for (int y = 0; y < height; y++) {
